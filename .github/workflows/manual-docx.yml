@@ -1,0 +1,43 @@
+name: Build Manual DOCX
+
+on:
+  push:
+    paths:
+      - 'docs/Manual_Usuario_Intencion_Siembra_v3.md'
+      - 'docs/images/**'
+      - '.github/workflows/manual-docx.yml'
+  workflow_dispatch:
+
+jobs:
+  build-docx:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Install pandoc
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y pandoc
+      
+      - name: Build DOCX from Markdown
+        run: |
+          cd docs
+          pandoc Manual_Usuario_Intencion_Siembra_v3.md \
+            -o Manual_Usuario_Intencion_Siembra_v3.docx \
+            --resource-path=.:images \
+            --standalone
+      
+      - name: Commit and push generated DOCX
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'docs/Manual_Usuario_Intencion_Siembra_v3.docx'
+          message: 'chore(docs): build Manual_Usuario_Intencion_Siembra_v3.docx via CI'
+          default_author: github_actions
+          push: true
