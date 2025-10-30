@@ -1,0 +1,51 @@
+name: Build Manual DOCX
+
+on:
+  push:
+    paths:
+      - 'docs/Manual_Usuario_Intencion_Siembra_v3.md'
+      - 'docs/images/**'
+      - '.github/workflows/manual-docx.yml'
+  workflow_dispatch:
+
+jobs:
+  build-docx:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      
+      - name: Install Pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+      
+      - name: Verify Pandoc installation
+        run: pandoc --version
+      
+      - name: Convert Markdown to DOCX
+        run: |
+          cd docs
+          pandoc Manual_Usuario_Intencion_Siembra_v3.md \
+            -o Manual_Usuario_Intencion_Siembra_v3.docx \
+            --resource-path=.:images \
+            --standalone
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Commit generated DOCX
+        run: |
+          git add docs/Manual_Usuario_Intencion_Siembra_v3.docx
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(docs): build Manual_Usuario_Intencion_Siembra_v3.docx via CI"
+            git push
+          fi
